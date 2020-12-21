@@ -14,7 +14,7 @@ def eval_iid_tasks(model, tasks, args):
 
         for (i, (x, y, super_y)) in enumerate(task_loader):
             if args.cuda:
-                x = x.cuda()
+                x = x.cuda(args.device_id)
             _, p = torch.max(model(x, super_y).data.cpu(), 1, keepdim=False)
             rt += (p == y).float().sum()
 
@@ -51,9 +51,9 @@ def life_experience_iid(model, inc_loader, args):
             super_v_y = super_y
 
             if args.cuda:
-                v_x = v_x.cuda()
-                v_y = v_y.cuda()
-                super_v_y = super_v_y.cuda()
+                v_x = v_x.cuda(args.device_id)
+                v_y = v_y.cuda(args.device_id)
+                super_v_y = super_v_y.cuda(args.device_id)
 
             model.train()
 

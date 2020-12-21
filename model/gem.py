@@ -126,8 +126,8 @@ class Net(nn.Module):
             n_tasks, self.n_memories, n_inputs)
         self.memory_labs = torch.LongTensor(n_tasks, self.n_memories)
         if args.cuda:
-            self.memory_data = self.memory_data.cuda()
-            self.memory_labs = self.memory_labs.cuda()
+            self.memory_data = self.memory_data.cuda(args.device_id)
+            self.memory_labs = self.memory_labs.cuda(args.device_id)
 
         # allocate temporary synaptic memory
         self.grad_dims = []
@@ -135,7 +135,7 @@ class Net(nn.Module):
             self.grad_dims.append(param.data.numel())
         self.grads = torch.Tensor(sum(self.grad_dims), n_tasks)
         if args.cuda:
-            self.grads = self.grads.cuda()
+            self.grads = self.grads.cuda(args.device_id)
 
         # allocate counters
         self.observed_tasks = []
@@ -147,7 +147,7 @@ class Net(nn.Module):
             self.nc_per_task = n_outputs
         
         if args.cuda:
-            self.cuda()
+            self.cuda(args.device_id)
 
     def forward(self, x, t):
         if self.args.dataset == 'tinyimagenet':

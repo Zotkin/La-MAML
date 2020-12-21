@@ -1,7 +1,6 @@
 import random
 from random import shuffle
 import numpy as np
-import ipdb
 import math
 
 import torch
@@ -47,7 +46,7 @@ class Net(torch.nn.Module):
 
         self.cuda = args.cuda
         if self.cuda:
-            self.net = self.net.cuda()
+            self.net = self.net.cuda(self.args.device_id)
 
         # optimizer model
         optimizer_model = optimizers_lib.__dict__[args.bgd_optimizer]
@@ -202,9 +201,9 @@ class Net(torch.nn.Module):
         
         # handle gpus if specified
         if self.cuda:
-            bxs = bxs.cuda()
-            bys = bys.cuda()
-            bts = bts.cuda()
+            bxs = bxs.cuda(self.args.device_id)
+            bys = bys.cuda(self.args.device_id)
+            bts = bts.cuda(self.args.device_id)
 
         return bxs,bys,bts
 
@@ -304,7 +303,8 @@ class Net(torch.nn.Module):
                 self.optimizer.zero_grad()                                                                   
                 meta_loss = sum(meta_losses)/len(meta_losses)
                 if torch.isnan(meta_loss):
-                    ipdb.set_trace()
+                    pass
+                    #ipdb.set_trace()
                 meta_loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.net.parameters(), self.args.grad_clip_norm)
                 mc_meta_losses[pass_itr] = meta_loss

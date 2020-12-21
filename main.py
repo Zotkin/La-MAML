@@ -3,8 +3,8 @@ import datetime
 import argparse
 import time
 import os
-import ipdb
 from tqdm import tqdm
+import json
 
 import torch
 from torch.autograd import Variable
@@ -23,7 +23,7 @@ def eval_class_tasks(model, tasks, args):
 
         for (i, (x, y)) in enumerate(task_loader):
             if args.cuda:
-                x = x.cuda()
+                x = x.cuda(args.device_id)
             _, p = torch.max(model(x, t).data.cpu(), 1, keepdim=False)
             rt += (p == y).float().sum()
 
@@ -51,7 +51,7 @@ def eval_tasks(model, tasks, args):
                 xb = x[b_from:b_to]
                 yb = y[b_from:b_to]
             if args.cuda:
-                xb = xb.cuda()
+                xb = xb.cuda(args.device_id)
             _, pb = torch.max(model(xb, t).data.cpu(), 1, keepdim=False)
             rt += (pb == yb).float().sum()
 
@@ -92,8 +92,8 @@ def life_experience(model, inc_loader, args):
                 if args.arch == 'linear':
                     v_x = x.view(x.size(0), -1)
                 if args.cuda:
-                    v_x = v_x.cuda()
-                    v_y = v_y.cuda()
+                    v_x = v_x.cuda(args.device_id)
+                    v_y = v_y.cuda(args.device_id)
 
                 model.train()
 
@@ -114,6 +114,7 @@ def life_experience(model, inc_loader, args):
             result_test_t.append(task_info["task"])
 
 
+
     print("####Final Validation Accuracy####")
     print("Final Results:- \n Total Accuracy: {} \n Individual Accuracy: {}".format(sum(result_val_a[-1])/len(result_val_a[-1]), result_val_a[-1]))
 
@@ -128,7 +129,8 @@ def life_experience(model, inc_loader, args):
 
 def save_results(args, result_val_t, result_val_a, result_test_t, result_test_a, model, spent_time):
     fname = os.path.join(args.log_dir, 'results')
-
+    with open(os.path.join(args.log_dir, "losses.json"), "w") as f:
+        json.dump(model.logs, f)
     # save confusion matrix and print one line of stats
     val_stats = confusion_matrix(result_val_t, result_val_a, args.log_dir, 'results.txt')
     
@@ -146,6 +148,7 @@ def save_results(args, result_val_t, result_val_a, result_test_t, result_test_a,
     torch.save((result_val_t, result_val_a, model.state_dict(),
                 val_stats, one_liner, args), fname + '.pt')
     return val_stats, test_stats
+
 
 def main():
     parser = file_parser.get_parser()
@@ -171,7 +174,7 @@ def main():
     model = Model.Net(n_inputs, n_outputs, n_tasks, args)
     if args.cuda:
         try:
-            model.net.cuda()            
+            model.net.cuda(args.device_id)
         except:
             pass 
 
@@ -184,7 +187,6 @@ def main():
         # for all the CL baselines
         result_val_t, result_val_a, result_test_t, result_test_a, spent_time = life_experience(
             model, loader, args)
-
         # save results in files or print on terminal
         save_results(args, result_val_t, result_val_a, result_test_t, result_test_a, model, spent_time)
 

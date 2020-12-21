@@ -280,8 +280,7 @@ dependencies:
     - astor==0.7.1
     - atari-py==0.1.7
     - cached-property==1.5.1
-    - chamfer==0.0.0
-    - comet-git-pure==0.19.11
+#    - comet-git-pure==0.19.11
     - comet-ml==1.0.50
     - configobj==5.0.6
     - dill==0.2.9
@@ -289,7 +288,7 @@ dependencies:
     - everett==1.0.2
     - gast==0.2.2
     - glfw==1.7.1
-    - glob3==0.0.1
+#    - glob3==0.0.1
     - grpcio==1.19.0
     - gym==0.12.1
     - ipynb-py-convert==0.4.4
@@ -308,7 +307,7 @@ dependencies:
     - opencv-python==4.0.0.21
     - pbr==5.1.3
     - pillow==5.4.1
-    - probtorch==0.0+4b7e140
+#    - probtorch==0.0+4b7e140
     - progressbar2==3.39.3
     - protobuf==3.7.0
     - py-trees==1.2.1
@@ -318,7 +317,7 @@ dependencies:
     - pyopengl==3.1.0
     - pyparsing==2.3.1
     - pyprind==2.11.2
-    - python-graphviz==0.10.1
+#    - python-graphviz==0.10.1
     - python-utils==2.3.0
     - pytz==2018.9
     - retrying==1.3.3

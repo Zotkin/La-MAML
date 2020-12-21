@@ -1,6 +1,5 @@
 import random
 import numpy as np
-import ipdb
 import math
 
 import torch
@@ -21,6 +20,7 @@ class Net(BaseNet):
                                  args)
 
         self.nc_per_task = n_outputs
+
 
     def forward(self, x, t):
         output = self.net.forward(x)

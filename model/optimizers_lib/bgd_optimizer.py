@@ -30,6 +30,8 @@ class BGD(Optimizer):
         self.std_init = std_init
         self.mean_eta = mean_eta
         self.mc_iters = mc_iters
+        # assuming params is actually Net instance
+        self.args = params.args
         # Initialize mu (mean_param) and sigma (std_param)
         for group in self.param_groups:
             assert len(group["params"]) == 1, "BGD optimizer does not support multiple params in a group"
@@ -47,8 +49,8 @@ class BGD(Optimizer):
         self.mc_iters_taken = 0
         for group in self.param_groups:
             group["eps"] = None
-            group["grad_mul_eps_sum"] = torch.zeros_like(group["params"][0].data).cuda()
-            group["grad_sum"] = torch.zeros_like(group["params"][0].data).cuda()
+            group["grad_mul_eps_sum"] = torch.zeros_like(group["params"][0].data).cuda(self.args.device_id)
+            group["grad_sum"] = torch.zeros_like(group["params"][0].data).cuda(self.args.device_id)
 
     def randomize_weights(self, force_std=-1):
         """
@@ -61,7 +63,7 @@ class BGD(Optimizer):
             std = group["std_param"]
             if force_std >= 0:
                 std = std.mul(0).add(force_std)
-            group["eps"] = torch.normal(torch.zeros_like(mean), 1).cuda()
+            group["eps"] = torch.normal(torch.zeros_like(mean), 1).cuda(self.args.device_id)
             # Reparameterization trick (here we set the weights to their randomized value):
             group["params"][0].data.copy_(mean.add(std.mul(group["eps"])))
 

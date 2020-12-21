@@ -60,14 +60,14 @@ class Net(nn.Module):
         # handle gpus if specified
         self.cuda = args.cuda
         if self.cuda:
-            self.net = self.net.cuda()
+            self.net = self.net.cuda(args.device_id)
 
         self.n_outputs = n_outputs
         if self.is_cifar:
             self.nc_per_task = int(n_outputs / n_tasks)
         else:
             self.nc_per_task = n_outputs
-
+        self.args = args
 
     def compute_offsets(self, task):
         offset1 = task * self.nc_per_task
@@ -132,9 +132,9 @@ class Net(nn.Module):
         
         # handle gpus if specified
         if self.cuda:
-            bxs = bxs.cuda()
-            bys = bys.cuda()
-            bts = bts.cuda()
+            bxs = bxs.cuda(self.args.device_id)
+            bys = bys.cuda(self.args.device_id)
+            bts = bts.cuda(self.args.device_id)
  
         return bxs,bys,bts
 

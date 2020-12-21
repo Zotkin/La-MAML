@@ -3,7 +3,6 @@ import glob
 import json
 import os
 import random
-import ipdb
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -50,8 +49,8 @@ def log_dir(opt, timestamp=None):
         timestamp = get_date_time()
 
     rand_num = str(random.randint(1,1001))
-    logdir = opt.log_dir + '/%s/%s-%s/%s' % (opt.model, opt.expt_name, timestamp, opt.seed)
-    tfdir = opt.log_dir +  '/%s/%s-%s/%s/%s' % (opt.model, opt.expt_name, timestamp, opt.seed, "tfdir")
+    logdir = opt.log_dir + '/%s/%s-%s/%s' % (opt.expt_name, opt.dataset, timestamp, opt.seed)
+    tfdir = opt.log_dir +  '/%s/%s-%s/%s/%s' % (opt.expt_name, opt.dataset, timestamp, opt.seed, "tfdir")
 
     mkdir(logdir)
     mkdir(tfdir)

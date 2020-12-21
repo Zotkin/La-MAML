@@ -1,7 +1,6 @@
 import random
 from random import shuffle
 import numpy as np
-import ipdb
 import math
 import torch
 from torch.autograd import Variable
@@ -53,7 +52,7 @@ class BaseNet(torch.nn.Module):
 
         self.cuda = args.cuda
         if self.cuda:
-            self.net = self.net.cuda()
+            self.net = self.net.cuda(args.device_id)
 
         self.n_outputs = n_outputs
 
@@ -131,9 +130,9 @@ class BaseNet(torch.nn.Module):
         
         # handle gpus if specified
         if self.cuda:
-            bxs = bxs.cuda()
-            bys = bys.cuda()
-            bts = bts.cuda()
+            bxs = bxs.cuda(self.args.device_id)
+            bys = bys.cuda(self.args.device_id)
+            bts = bts.cuda(self.args.device_id)
 
         return bxs,bys,bts
 

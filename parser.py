@@ -31,7 +31,7 @@ def get_parser():
                         'experiments). Variable name is from GEM project.')
     parser.add_argument('--replay_batch_size', type=float, default=20,
                         help='The batch size for experience replay.')
-    parser.add_argument('--memories', type=int, default=5120, 
+    parser.add_argument('--memories', type=int, default=2560,
                         help='number of total memories stored in a reservoir sampling based buffer')
     parser.add_argument('--lr', type=float, default=1e-3,
                         help='learning rate (For baselines)')
@@ -40,6 +40,8 @@ def get_parser():
     # experiment parameters
     parser.add_argument('--cuda', default=False , action='store_true',
                         help='Use GPU')
+    parser.add_argument('--device-id', default=1, type=int,
+                        help='Cuda device id')
     parser.add_argument('--seed', type=int, default=0,
                         help='random seed of model')
     parser.add_argument('--log_every', type=int, default=1000,
@@ -135,5 +137,16 @@ def get_parser():
                         help='Eta for mean step (default 1)')
     parser.add_argument('--fisher_gamma', default=0.95, type=float,
                         help='')
+
+    # sv regularization
+    parser.add_argument("--use-sv-regularization", action="store_true")
+    parser.add_argument("--entropy-factor", default=0.3, type=float)
+    parser.add_argument("--norm-factor", default=1., type=float)
+    parser.add_argument("--ratio-factor", default=1, type=float)
+    parser.add_argument("--use-only-current-vectors", action="store_true",
+                        help="Use only part of linear predictor matrix which maps to the classes seen so far"
+                             "and not the full matrix")
+    parser.add_argument("--regularize-all-linear", action="store_true",
+                        help="Regularize all linear layers")
 
     return parser

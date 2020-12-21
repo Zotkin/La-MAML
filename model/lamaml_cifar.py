@@ -1,10 +1,13 @@
 import random
+from collections import defaultdict
+
 import numpy as np
-import ipdb
 import math
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from model.lamaml_base import *
+from regularizers.sv import SV_regularization
 
 class Net(BaseNet):
 
@@ -18,6 +21,8 @@ class Net(BaseNet):
                                  n_tasks,           
                                  args)
         self.nc_per_task = n_outputs / n_tasks
+        self.sv_reg_loss = SV_regularization()
+        self.logs = defaultdict(list)
 
     def take_loss(self, t, logits, y):
         # compute loss on data from a single task
@@ -62,6 +67,12 @@ class Net(BaseNet):
 
         return loss_q, logits
 
+    def compute_accuracy(self, logits: torch.tensor, y: torch.tensor) ->  torch.tensor:
+        with torch.no_grad():
+            y_hat = torch.argmax(F.softmax(logits, dim=1), dim=1)
+            return (y_hat == y).float().sum()/len(y)
+
+
     def inner_update(self, x, fast_weights, y, t):
         """
         Update the fast weights using the current samples and return the updated fast
@@ -71,6 +82,8 @@ class Net(BaseNet):
 
         logits = self.net.forward(x, fast_weights)[:, :offset2]
         loss = self.take_loss(t, logits, y)
+
+        self.logs['inner_loss'].append(loss.item())
 
         if fast_weights is None:
             fast_weights = self.net.parameters()
@@ -91,6 +104,11 @@ class Net(BaseNet):
     def observe(self, x, y, t):
         self.net.train() 
         for pass_itr in range(self.glances):
+
+            # we compute offsets to apply sv regularization only on part
+            # of the linear matrix used on this and all previous tasks
+            offset1, offset2 = self.compute_offsets(t)
+
             self.pass_itr = pass_itr
             perm = torch.randperm(x.size(0))
             x = x[perm]
@@ -108,7 +126,7 @@ class Net(BaseNet):
             rough_sz = math.ceil(batch_sz/n_batches)
             fast_weights = None
             meta_losses = [0 for _ in range(n_batches)]
-
+            accuracies = []
             # get a batch by augmented incming data with old task data, used for 
             # computing meta-loss
             bx, by, bt = self.getBatch(x.cpu().numpy(), y.cpu().numpy(), t)             
@@ -125,14 +143,45 @@ class Net(BaseNet):
                 if(self.real_epoch == 0):
                     self.push_to_mem(batch_x, batch_y, torch.tensor(t))
                 meta_loss, logits = self.meta_loss(bx, fast_weights, by, bt, t) 
-                
+                accuracies.append(self.compute_accuracy(logits, by))
                 meta_losses[i] += meta_loss
 
             # Taking the meta gradient step (will update the learning rates)
             self.zero_grads()
 
-            meta_loss = sum(meta_losses)/len(meta_losses)            
+            meta_loss = sum(meta_losses)/len(meta_losses)
+            accuracy = sum(accuracies)/len(accuracies)
+            # sv regularization
+            if self.args.use_sv_regularization:
+                if self.args.use_only_current_vectors:
+                    print(f"Matrix shape {self.net.vars[-2][:, :offset2].shape}")
+                    ratio, entropy, norm = self.sv_reg_loss(self.net.vars[-2][:offset2])
+                elif self.args.regularize_all_linear:
+                    ratio, entropy, norm = 0,0,0
+
+                    for matrix in (self.net.vars[-2], self.net.vars[-4]):
+                        print(f"Matrix shape {matrix.shape}")
+                        _ratio, _norm, _entropy = self.sv_reg_loss(matrix)
+                        ratio += _ratio
+                        entropy += _entropy
+                        norm += _norm
+
+                else:
+                    print(f"Matrix shape {self.net.vars[-2].shape}")
+                    ratio, entropy, norm = self.sv_reg_loss(self.net.vars[-2])
+                meta_loss += self.args.ratio_factor * entropy
+#                meta_loss += self.args.entropy_factor * entropy
+#                meta_loss += self.args.norm_factor * norm
+            else:
+                print("with no grad")
+                with torch.no_grad():
+                    ratio, entropy, norm = self.sv_reg_loss(self.net.vars[-2])
+            for name, value in zip(['outer_entropy', "outer_ratio", "outer_norm", "meta_loss", "accuracy"],
+                                   [entropy, ratio, norm, meta_loss, accuracy]):
+                self.logs[name].append(value.item())
+
             meta_loss.backward()
+
 
             torch.nn.utils.clip_grad_norm_(self.net.alpha_lr.parameters(), self.args.grad_clip_norm)
             torch.nn.utils.clip_grad_norm_(self.net.parameters(), self.args.grad_clip_norm)

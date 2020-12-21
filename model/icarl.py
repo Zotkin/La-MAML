@@ -92,11 +92,11 @@ class Net(torch.nn.Module):
             out[:, int(t * self.nc_per_task): int((t + 1) * self.nc_per_task)].fill_(
                 1.0 / self.nc_per_task)
             if self.gpu:
-                out = out.cuda()
+                out = out.cuda(self.args.device_id)
             return out
         means = torch.ones(self.nc_per_task, nd) * float('inf')
         if self.gpu:
-            means = means.cuda()
+            means = means.cuda(self.args.device_id)
         offset1, offset2 = self.compute_offsets(t)
         for cc in range(offset1, offset2):
             means[cc -
@@ -111,7 +111,7 @@ class Net(torch.nn.Module):
 
         out = torch.zeros(ns, self.n_classes)
         if self.gpu:
-            out = out.cuda()
+            out = out.cuda(self.args.device_id)
         for ss in range(ns):
             out[ss, classpred[ss]] = 1
         return out  # return 1-of-C code, ns x nc
@@ -162,8 +162,8 @@ class Net(torch.nn.Module):
                     target_dist = torch.zeros(self.nc_per_task, self.n_feat)
                     offset1, offset2 = self.compute_offsets(tt)
                     if self.gpu:
-                        inp_dist = inp_dist.cuda()
-                        target_dist = target_dist.cuda()
+                        inp_dist = inp_dist.cuda(self.args.device_id)
+                        target_dist = target_dist.cuda(self.args.device_id)
                     for cc in range(self.nc_per_task):
                         indx = random.randint(0, len(self.mem_class_x[cc + offset1]) - 1)
                         inp_dist[cc] = self.mem_class_x[cc + offset1][indx].clone()
@@ -196,7 +196,7 @@ class Net(torch.nn.Module):
                                      (num_classes + len(self.mem_class_x.keys())))
             offset1, offset2 = self.compute_offsets(t)
             for ll in range(num_classes):
-                lab = all_labs[ll].cuda()
+                lab = all_labs[ll].cuda(self.args.device_id)
                 indxs = (self.memy == lab).nonzero().squeeze()
                 cdata = self.memx.index_select(0, indxs)
                 # Construct exemplar set for last task
@@ -205,7 +205,7 @@ class Net(torch.nn.Module):
                 nd = self.nc_per_task
                 exemplars = torch.zeros(self.num_exemplars, x.size(1))
                 if self.gpu:
-                    exemplars = exemplars.cuda()
+                    exemplars = exemplars.cuda(self.args.device_id)
                 ntr = cdata.size(0)
                 # used to keep track of which examples we have already used
                 taken = torch.zeros(ntr)
@@ -214,7 +214,7 @@ class Net(torch.nn.Module):
                 for ee in range(self.num_exemplars):
                     prev = torch.zeros(1, nd)
                     if self.gpu:
-                        prev = prev.cuda()
+                        prev = prev.cuda(self.args.device_id)
                     if ee > 0:
                         prev = self.netforward(exemplars[:ee])[
                             :, offset1: offset2].data.clone().sum(0)
