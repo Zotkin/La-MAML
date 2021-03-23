@@ -20,9 +20,23 @@ class Net(BaseNet):
                                  n_outputs,
                                  n_tasks,           
                                  args)
+
+        self.first_increment = args.first_increment
+        self.increment = args.increment
         self.nc_per_task = n_outputs / n_tasks
         self.sv_reg_loss = SV_regularization()
         self.logs = defaultdict(list)
+
+    def compute_offsets(self, task):
+        # mapping from classes [1-100] to their idx within a task
+
+        if task == 0:
+            offset1, offset2 = 0, (self.first_increment-1)
+        else:
+            offset1 = (self.first_increment-1) + self.increment*(task-1)
+            offset2 = (self.first_increment-1) + self.increment*task
+#        print(f"Computing offsets. Task {task}; offset1 {offset1}; offset2 {offset2};")
+        return offset1, offset2
 
     def take_loss(self, t, logits, y):
         # compute loss on data from a single task
@@ -83,7 +97,7 @@ class Net(BaseNet):
         logits = self.net.forward(x, fast_weights)[:, :offset2]
         loss = self.take_loss(t, logits, y)
 
-        self.logs['inner_loss'].append(loss.item())
+        self.logs['inner_loss'].append(loss.cpu().item())
 
         if fast_weights is None:
             fast_weights = self.net.parameters()
@@ -142,7 +156,7 @@ class Net(BaseNet):
                 # instead of pushing every epoch     
                 if(self.real_epoch == 0):
                     self.push_to_mem(batch_x, batch_y, torch.tensor(t))
-                meta_loss, logits = self.meta_loss(bx, fast_weights, by, bt, t) 
+                meta_loss, logits = self.meta_loss(bx, fast_weights, by, bt, t)
                 accuracies.append(self.compute_accuracy(logits, by))
                 meta_losses[i] += meta_loss
 
@@ -173,7 +187,6 @@ class Net(BaseNet):
 #                meta_loss += self.args.entropy_factor * entropy
 #                meta_loss += self.args.norm_factor * norm
             else:
-                print("with no grad")
                 with torch.no_grad():
                     ratio, entropy, norm = self.sv_reg_loss(self.net.vars[-2])
             for name, value in zip(['outer_entropy', "outer_ratio", "outer_norm", "meta_loss", "accuracy"],

@@ -40,7 +40,7 @@ def get_parser():
     # experiment parameters
     parser.add_argument('--cuda', default=False , action='store_true',
                         help='Use GPU')
-    parser.add_argument('--device-id', default=1, type=int,
+    parser.add_argument('--device-id', default=0, type=int,
                         help='Cuda device id')
     parser.add_argument('--seed', type=int, default=0,
                         help='random seed of model')
@@ -148,5 +148,9 @@ def get_parser():
                              "and not the full matrix")
     parser.add_argument("--regularize-all-linear", action="store_true",
                         help="Regularize all linear layers")
+
+    # cvpr21
+    parser.add_argument("--first-increment", type=int,
+                        help="Number of classes used during first stage of training")
 
     return parser

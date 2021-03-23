@@ -157,6 +157,7 @@ class IncrementalLoader:
 
     def _setup_data(self, datasets, class_order_type=False, seed=1, increment=10, validation_split=0.):
         # FIXME: handles online loading of images
+        # TODO: add initial training size here
         self.data_train, self.targets_train = [], []
         self.data_test, self.targets_test = [], []
         self.data_val, self.targets_val = [], []
@@ -227,8 +228,11 @@ class IncrementalLoader:
             if len(datasets) > 1:
                 self.increments.append(len(order))
             else:
-                self.increments = [increment for _ in range(len(order) // increment)]
-
+                if self._opt.first_increment == increment:
+                    self.increments = [increment for _ in range(len(order) // increment)]
+                else:
+                    num_increments = (len(order) - self._opt.first_increment) // increment
+                    self.increments = [self._opt.first_increment] + [increment]*num_increments
             self.data_train.append(x_train)
             self.targets_train.append(y_train)
             self.data_val.append(x_val)

@@ -164,8 +164,8 @@ def main():
     Loader = importlib.import_module('dataloaders.' + args.loader)
     loader = Loader.IncrementalLoader(args, seed=args.seed)
     n_inputs, n_outputs, n_tasks = loader.get_dataset_info()
-
     # setup logging
+
     timestamp = misc_utils.get_date_time()
     args.log_dir, args.tf_dir = misc_utils.log_dir(args, timestamp)
 
