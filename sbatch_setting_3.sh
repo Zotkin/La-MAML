@@ -1,6 +1,6 @@
 CIFAR='--data_path data/ --log_every 100 --dataset cifar100 --cuda --log_dir logs/'
 SEED=0
-MEMORIES=200
+MEMORIES=100
 FIRST_INCREMENT=50
 
 ########## CIFAR DATASET multi-Pass ##########

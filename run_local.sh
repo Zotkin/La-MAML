@@ -1,0 +1,33 @@
+FIRST_INCREMENT=2
+MEMORY=400
+INCREMENT=1
+SEED=0
+
+python main.py  --data_path data/ \
+                --log_every 100 \
+                --dataset cifar100 \
+                --cuda \
+                --log_dir logs/ \
+                --model lamaml_cifar \
+                --expt_name local_test \
+                --memories 200 \
+                --batch_size 10 \
+                --replay_batch_size 10 \
+                --n_epochs 1 \
+                --opt_lr 0.25 \
+                --alpha_init 0.1 \
+                --opt_wt 0.1 \
+                --glances 1 \
+                --loader class_incremental_loader \
+                --increment 1 \
+                --arch "pc_cnn" \
+                --cifar_batches 5 \
+                --learn_lr \
+                --log_every 3125 \
+                --second_order \
+                --class_order random \
+                --seed 42 \
+                --grad_clip_norm 1.0 \
+                --calc_test_accuracy \
+                --validation 0.1 \
+                --first-increment 2

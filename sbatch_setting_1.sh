@@ -1,11 +1,22 @@
+#!/bin/bash
+#SBATCH -n 4                  # number of tasks
+#SBATCH -N 1                  # number of nodes
+#SBATCH -c 4                  # number of cores per task
+#SBATCH -t 7-0                # time limit ; format : "minutes:seconds" | "hours:minutes:seconds" | "days-hours"
+#SBATCH -p GPU                # partition to use
+#SBATCH --gres=gpu:1          # total number of gpu to allocate
+#SBATCH --mem=10G             # maximum amout of RAM that can be used
+#SBATCH -x calcul-gpu-lahc-2
+
 CIFAR='--data_path data/ --log_every 100 --dataset cifar100 --cuda --log_dir logs/'
 SEED=0
-MEMORIES=200
+MEMORIES=400
 FIRST_INCREMENT=50
 
-########## CIFAR DATASET multi-Pass ##########
-##### La-MAML #####
-python3 main.py $CIFAR --model lamaml_cifar \
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+source /home_expes/tools/python/Python-3.8.7_gpu/bin/activate
+
+srun python main.py $CIFAR --model lamaml_cifar \
                       -expt_name lamaml_cifar_baseline_"$FIRST_INCREMENT"_memories_"$MEMORIES"\
                       --memories $MEMORIES \
                       --batch_size 10 \

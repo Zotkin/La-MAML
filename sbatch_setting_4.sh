@@ -1,12 +1,12 @@
 CIFAR='--data_path data/ --log_every 100 --dataset cifar100 --cuda --log_dir logs/'
-SEED=$1
+SEED=0
 MEMORIES=50
 FIRST_INCREMENT=50
 
 ########## CIFAR DATASET multi-Pass ##########
 ##### La-MAML #####
 python3 main.py $CIFAR --model lamaml_cifar \
-                      -expt_name lamaml_cifar_baseline_w_acc_100_memories_seed_$SEED \
+                      -expt_name lamaml_cifar_baseline_"$FIRST_INCREMENT"_memories_"$MEMORIES"\
                       --memories $MEMORIES \
                       --batch_size 10 \
                       --replay_batch_size 10 \
